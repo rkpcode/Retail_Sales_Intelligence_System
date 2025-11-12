@@ -1,0 +1,12 @@
+numpy
+pandas
+scikit-learn==1.7.1
+mysql-connector-python
+PyMySQL
+matplotlib
+seaborn
+flask
+catboost
+xgboost
+MLflow
+dagshub
