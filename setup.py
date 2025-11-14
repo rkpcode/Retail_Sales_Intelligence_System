@@ -31,7 +31,7 @@ if readme.exists():
 
 
 setup(
-    name="Retail Sale Intelligent System",
+    name="Retail_Sale_Intelligent_System",
     version="0.0.1",
     description="Retail Sales Intelligence System – Business EDA Project",
     long_description=long_description,
