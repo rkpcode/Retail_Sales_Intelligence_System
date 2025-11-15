@@ -1,5 +1,5 @@
 import sys
-from src.mlproject.logger import logging
+from src.Retail_Sale_Intelligent_Systemc..logger import logging
 
 
 def error_message_details(error, error_detail: sys):
