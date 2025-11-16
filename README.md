@@ -133,14 +133,4 @@ To analyze a real-world retail dataset and extract actionable insights on **sale
 
 ## 🌐 Project Links
 - 📂 **GitHub Repository:** [Add your link here once uploaded]  
-- 💼 **LinkedIn Post:** [Share your visuals + summary here]
-
----
-
-## 🏁 Mentor’s Note
-> Rahul has completed a **real-world, hiring-ready data analysis project**.  
-> This project showcases both **technical skill** and **strategic business understanding** — exactly what companies look for in an entry-level Data Analyst or Data Scientist.
-
----
-
-🧭 *Developed under mentorship guidance with structured, insight-driven EDA approach.*
+- 💼 **LinkedIn Post:** [Share your visuals + summary here]
