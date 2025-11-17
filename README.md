@@ -133,4 +133,6 @@ To analyze a real-world retail dataset and extract actionable insights on **sale
 
 ## 🌐 Project Links
 - 📂 **GitHub Repository:** [Add your link here once uploaded]  
-- 💼 **LinkedIn Post:** [Share your visuals + summary here]
+- 💼 **LinkedIn Post:** [Share your visuals + summary here]
+
+

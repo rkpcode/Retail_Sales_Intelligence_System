@@ -17,7 +17,7 @@ class DataIngestion:
     def __init__(self):
         self.ingestion_config = DataIngestionConfig()
 
-    def initiate_data_ingestion(self, file_path: str):
+    def initiate_data_ingestion(self):
         logging.info("Starting data ingestion process")
         try:
             # Read the dataset
