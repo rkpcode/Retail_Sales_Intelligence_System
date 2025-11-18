@@ -30,6 +30,7 @@ def read_sql_data():
         logging.info(f"Connection Established: {mydb}")
         df = pd.read_sql_query('SELECT * FROM superstore_sales', mydb)
         print(df.head())
+        
 
         return df
         

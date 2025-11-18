@@ -1,7 +1,7 @@
 from src.Retail_Sale_Intelligent_System.logger import logging
 from src.Retail_Sale_Intelligent_System.exception import CustomException
 from src.Retail_Sale_Intelligent_System.components.data_ingestion import DataIngestion
-#from src.Retail_Sale_Intelligent_System.components.data_transformation import DataTransformation
+from src.Retail_Sale_Intelligent_System.components.data_transformation import DataTransformation
 #appfrom src.Retail_Sale_Intelligent_System.components.model_trainer import ModelTrainerConfig,ModelTrainer
 import sys
 
@@ -17,8 +17,8 @@ if __name__ == "__main__":
         train_data_path, test_data_path = data_ingestion.initiate_data_ingestion("")
 
         # Run data transformation and get transformed arrays
-       # data_transformation = DataTransformation()
-       # train_array, test_array, _ = data_transformation.initiate_data_transormation(train_data_path, test_data_path)
+        data_transformation = DataTransformation()
+        train_array, test_array, _ = data_transformation.initiate_data_transormation(train_data_path, test_data_path)
         
         # Model Training
        # model_trainer = ModelTrainer()
