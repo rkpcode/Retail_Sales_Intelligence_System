@@ -27,10 +27,9 @@ class DataTransformation:
         '''
         try:
             # define features
-            # Must match the columns generated in data_ingestion.py
-            numerical_features = ['Sales','Quantity','Discount','Profit Margin (%)','Ship_Duration','Log_Sales','Month_Num','Weekday_Num']
+            # REMOVED: 'Profit Margin (%)' from numerical list
+            numerical_features = ['Sales','Quantity','Discount','Ship_Duration','Log_Sales','Month_Num','Weekday_Num']
             
-            # UPDATED: Using underscores to match SQL/Ingestion output
             categorical_features = ['Region','Segment','Category','Sub_Category','Ship_Mode']
             
             num_transformer=Pipeline(steps=[
@@ -65,7 +64,6 @@ class DataTransformation:
 
             preprocessing_obj=self.get_data_transformer_object()
 
-            
             target_column_name = 'Profitable'
 
             ## divide the train dataset to independent and dependent feature

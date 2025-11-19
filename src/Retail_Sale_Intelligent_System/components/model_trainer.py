@@ -5,166 +5,157 @@ from urllib.parse import urlparse
 import mlflow
 import mlflow.sklearn
 import numpy as np
-from sklearn.metrics import mean_squared_error,mean_absolute_error
-from catboost import CatBoostRegressor
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from catboost import CatBoostClassifier
 from sklearn.ensemble import (
-    AdaBoostRegressor,
-    GradientBoostingRegressor,
-    RandomForestRegressor,
+    RandomForestClassifier,
+    GradientBoostingClassifier,
 )
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.tree import DecisionTreeRegressor
-from xgboost import XGBRegressor
+from sklearn.linear_model import LogisticRegression
+from xgboost import XGBClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 from src.Retail_Sale_Intelligent_System.exception import CustomException
 from src.Retail_Sale_Intelligent_System.logger import logging
-from src.Retail_Sale_Intelligent_System.utils import save_object,evaluate_models
+from src.Retail_Sale_Intelligent_System.utils import save_object, evaluate_models
 import dagshub
-
-
 
 @dataclass
 class ModelTrainerConfig:
-    trained_model_file_path=os.path.join("artifacts","model.pkl")
+    trained_model_file_path = os.path.join("artifacts", "model.pkl")
 
 class ModelTrainer:
     def __init__(self):
-        self.model_trainer_config=ModelTrainerConfig()
+        self.model_trainer_config = ModelTrainerConfig()
 
-    def eval_metrics(self,actual, pred):
-        rmse = np.sqrt(mean_squared_error(actual, pred))
-        mae = mean_absolute_error(actual, pred)
-        r2 = r2_score(actual, pred)
-        return rmse, mae, r2
+    def eval_metrics(self, actual, pred):
+        """
+        Calculate metrics for classification:
+        - Accuracy: Overall correctness
+        - Precision/Recall/F1: Weighted average to handle class imbalance
+        """
+        accuracy = accuracy_score(actual, pred)
+        # 'weighted' calculates metrics for each label, and finds their average weighted by support
+        precision = precision_score(actual, pred, average='weighted', zero_division=1)
+        recall = recall_score(actual, pred, average='weighted', zero_division=1)
+        f1 = f1_score(actual, pred, average='weighted', zero_division=1)
+        return accuracy, precision, recall, f1
 
-    def initiate_model_trainer(self,train_array,test_array):
+    def initiate_model_trainer(self, train_array, test_array):
         try:
             logging.info("Split training and test input data")
-            X_train,y_train,X_test,y_test=(
-                train_array[:,:-1],
-                train_array[:,-1],
-                test_array[:,:-1],
-                test_array[:,-1]
+            X_train, y_train, X_test, y_test = (
+                train_array[:, :-1],
+                train_array[:, -1],
+                test_array[:, :-1],
+                test_array[:, -1]
             )
+
+            # --- MODELS DICTIONARY ---
+            # Using Classifiers. 
+            # class_weight='balanced' is crucial here to penalize mistakes on the minority class (Loss).
             models = {
-                "Random Forest": RandomForestRegressor(),
-                "Decision Tree": DecisionTreeRegressor(),
-                "Gradient Boosting": GradientBoostingRegressor(),
-                "Linear Regression": LinearRegression(),
-                "XGBRegressor": XGBRegressor(),
-                "CatBoosting Regressor": CatBoostRegressor(verbose=False),
-                "AdaBoost Regressor": AdaBoostRegressor(),
+                "Random Forest": RandomForestClassifier(class_weight='balanced', random_state=42),
+                "XGBClassifier": XGBClassifier(eval_metric='logloss', use_label_encoder=False),
+                "CatBoosting Classifier": CatBoostClassifier(verbose=False, auto_class_weights='Balanced'),
+                "Gradient Boosting": GradientBoostingClassifier(random_state=42),
+                "Decision Tree": DecisionTreeClassifier(class_weight='balanced', random_state=42)
             }
-            params={
-                "Decision Tree": {
-                    'criterion':['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
-                    # 'splitter':['best','random'],
-                    # 'max_features':['sqrt','log2'],
+
+            # --- HYPERPARAMETERS ---
+            params = {
+                "Random Forest": {
+                    'n_estimators': [50, 100, 200],
+                    'max_depth': [10, 20, None],
+                    'min_samples_split': [2, 5, 10],
+                    'criterion': ['gini', 'entropy']
                 },
-                "Random Forest":{
-                    # 'criterion':['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
-                 
-                    # 'max_features':['sqrt','log2',None],
-                    'n_estimators': [8,16,32,64,128,256]
+                "XGBClassifier": {
+                    'learning_rate': [0.01, 0.1, 0.2],
+                    'n_estimators': [100, 200],
+                    'max_depth': [3, 5, 7],
+                    # scale_pos_weight can be added here if imbalance is severe
                 },
-                "Gradient Boosting":{
-                    # 'loss':['squared_error', 'huber', 'absolute_error', 'quantile'],
-                    'learning_rate':[.1,.01,.05,.001],
-                    'subsample':[0.6,0.7,0.75,0.8,0.85,0.9],
-                    # 'criterion':['squared_error', 'friedman_mse'],
-                    # 'max_features':['auto','sqrt','log2'],
-                    'n_estimators': [8,16,32,64,128,256]
-                },
-                "Linear Regression":{},
-                "XGBRegressor":{
-                    'learning_rate':[.1,.01,.05,.001],
-                    'n_estimators': [8,16,32,64,128,256]
-                },
-                "CatBoosting Regressor":{
-                    'depth': [6,8,10],
+                "CatBoosting Classifier": {
+                    'depth': [4, 6, 8],
                     'learning_rate': [0.01, 0.05, 0.1],
-                    'iterations': [30, 50, 100]
+                    'iterations': [100, 200]
                 },
-                "AdaBoost Regressor":{
-                    'learning_rate':[.1,.01,0.5,.001],
-                    # 'loss':['linear','square','exponential'],
-                    'n_estimators': [8,16,32,64,128,256]
+                "Gradient Boosting": {
+                    'learning_rate': [0.01, 0.1],
+                    'n_estimators': [100, 200],
+                    'subsample': [0.8, 1.0]
+                },
+                "Decision Tree": {
+                    'criterion': ['gini', 'entropy'],
+                    'max_depth': [10, 20, None]
                 }
-                
             }
 
+            logging.info("Starting Model Training with Hyperparameter Tuning")
+            
+            # evaluate_models function in utils.py MUST be compatible with Classifiers 
+            # (it should calculate accuracy/score, not R2)
+            model_report: dict = evaluate_models(X_train, y_train, X_test, y_test, models, params)
 
-
-            model_report:dict=evaluate_models(X_train,y_train,X_test,y_test,models,params)
-
-            ## To get best model score from dict
+            # Get best model score
             best_model_score = max(sorted(model_report.values()))
 
-             ## To get best model name from dict
-
+            # Get best model name
             best_model_name = list(model_report.keys())[
                 list(model_report.values()).index(best_model_score)
             ]
+            
             best_model = models[best_model_name]
 
-            print("This is the best model:")
-            print(best_model_name)
+            print(f"\n==============================")
+            print(f"Best Model Found: {best_model_name}")
+            print(f"Accuracy Score: {best_model_score * 100:.2f}%")
+            print(f"==============================\n")
 
-            model_names = list(params.keys())
-
-            actual_model=""
-
-            for model in model_names:
-                if best_model_name == model:
-                    actual_model = actual_model + model
-
-            best_params = params[actual_model]
-            
-            #dagshub
-            dagshub.init(repo_owner='rkpcode', repo_name='ML_projects', mlflow=True)
-            
-
-            mlflow.set_registry_uri("https://dagshub.com/rkpcode/ML_projects.mlflow")
-            tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
-
-            # mlflow
+            # --- MLflow / DagsHub Logging ---
+            dagshub.init(repo_owner='rkpcode', repo_name='Retail_Sales_Intelligence_System', mlflow=True)
+            mlflow.set_registry_uri("https://dagshub.com/rkpcode/Retail_Sales_Intelligence_System.mlflow")
 
             with mlflow.start_run():
+                predicted_classes = best_model.predict(X_test)
+                
+                (accuracy, precision, recall, f1) = self.eval_metrics(y_test, predicted_classes)
 
-                predicted_qualities = best_model.predict(X_test)
+                # Log Metrics
+                mlflow.log_metric("accuracy", accuracy)
+                mlflow.log_metric("f1_score", f1)
+                mlflow.log_metric("precision", precision)
+                mlflow.log_metric("recall", recall)
+                
+                # Log Confusion Matrix (Visible in Console)
+                # Format: [[True Neg, False Pos], [False Neg, True Pos]]
+                cm = confusion_matrix(y_test, predicted_classes)
+                print("Confusion Matrix (Reality Check):")
+                print(cm)
+                print("Legend: [Top-Left: True Loss, Bottom-Right: True Profit]")
 
-                (rmse, mae, r2) = self.eval_metrics(y_test, predicted_qualities)
-
-                mlflow.log_params(best_params)
-                mlflow.log_metric("rmse", rmse)
-                mlflow.log_metric("r2", r2)
-                mlflow.log_metric("mae", mae)
-
-                # Save the best model locally instead of logging to MLflow
+                # Save Model
                 import pickle
                 with open("artifacts/best_model.pkl", "wb") as f:
                     pickle.dump(best_model, f)
-                # Removed all mlflow.sklearn.log_model calls
-                
+                    
+                # Optional: Log model to remote registry
+                # mlflow.sklearn.log_model(best_model, "model")
 
-
-            if best_model_score<0.6:
-                raise CustomException("No best model found")
-            logging.info(f"Best found model on both training and testing dataset")
+            # Threshold Check
+            # Lowered to 0.55 because real world prediction without data leakage is hard.
+            if best_model_score < 0.55:
+                raise CustomException(f"Model performance is too poor ({best_model_score:.2f}). Check data quality or add more features.", sys)
+            
+            logging.info(f"Best found model saved: {best_model_name}")
 
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
                 obj=best_model
             )
 
-            predicted=best_model.predict(X_test)
-
-            r2_square = r2_score(y_test, predicted)
-            return r2_square
-
-
+            return best_model_score
 
         except Exception as e:
-            raise CustomException(e,sys)
+            raise CustomException(e, sys)

@@ -34,7 +34,7 @@ class DataIngestion:
 
             # --- Feature Engineering ---
             
-            # 1. Target Variable
+            # 1. Create Target Variable (This is the ONLY place Profit is used)
             df['Profitable'] = (df['Profit'] > 0).astype(int)
             
             # 2. Date Handling 
@@ -46,22 +46,20 @@ class DataIngestion:
             df['Month'] = df['Order_Date'].dt.month_name()
             df['Weekday'] = df['Order_Date'].dt.day_name()
 
-            # 4. Calculate Missing Features (Crucial Step!)
+            # 4. Calculate Missing Features
             # Calculate Ship_Duration
             df['Ship_Duration'] = (df['Ship_Date'] - df['Order_Date']).dt.days
             
-            # Calculate Profit Margin (%)
-            # Handle division by zero if necessary, though Sales should be > 0
-            df['Profit Margin (%)'] = (df['Profit'] / df['Sales']) * 100
+            # REMOVED: Profit Margin calculation. It causes Data Leakage.
 
-            # Split Data based on Year
+            # Split Data based on Year (Temporal Split)
             train_df = df[df['Year'] < 2017].copy()
             test_df  = df[df['Year'] == 2017].copy()
 
             # Define columns to keep
-            # NOTE: standardized on underscores to match SQL output (Ship_Mode, Sub_Category)
+            # REMOVED: 'Profit', 'Profit Margin (%)' -> We want to PREDICT these, not use them.
             feature_cols = [
-               'Sales', 'Quantity', 'Discount', 'Profit', 'Profit Margin (%)', 'Ship_Duration',
+               'Sales', 'Quantity', 'Discount', 'Ship_Duration',
                'Region', 'Segment', 'Category', 'Sub_Category', 'Ship_Mode', 
                'Month', 'Weekday'
              ]
@@ -89,8 +87,11 @@ class DataIngestion:
                 df_['Weekday_Num'] = df_['Weekday'].map(dow_map)
                 
                 # Target Encoding for Sub_Category
+                # Note: We map using Training means ONLY to avoid leakage
                 means_sub = X_train.join(y_train).groupby('Sub_Category')['Profitable'].mean()
                 df_['SubCat_ProfRate'] = df_['Sub_Category'].map(means_sub)
+                
+                # Fill NaN values (for categories present in Test but not Train)
                 if 'SubCat_ProfRate' in df_.columns and df_['SubCat_ProfRate'].isnull().any():
                      df_['SubCat_ProfRate'] = df_['SubCat_ProfRate'].fillna(means_sub.mean())
 
