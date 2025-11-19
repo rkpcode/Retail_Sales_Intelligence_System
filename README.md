@@ -132,7 +132,7 @@ To analyze a real-world retail dataset and extract actionable insights on **sale
 ---
 
 ## 🌐 Project Links
-- 📂 **GitHub Repository:** [Add your link here once uploaded]  
+- 📂 **GitHub Repository:** [https://github.com/rkpcode/Retail_Sales_Intelligence_System]  
 - 💼 **LinkedIn Post:** [Share your visuals + summary here]
 
 
