@@ -1,7 +1,7 @@
 # 🧠 Retail Sales Intelligence System – Business EDA Project
 
 ## 🎯 Objective
-To analyze a real-world retail dataset and extract actionable insights on **sales performance, profit drivers, discount impact, and regional trends** using Python-based exploratory data analysis.
+To analyze a real-world retail dataset and extract actionable insights on **sales performance, profit drivers, discount impact, and regional trends** using Python-based exploratory data analysis. And also create classification Model that predicts the transaction will be profitable/Loss
 
 ---
 
