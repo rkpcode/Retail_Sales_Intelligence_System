@@ -2,4 +2,4 @@
 /test.csv
 /train.csv
 /preprocessor.pkl
-/best_model.pkl
+/model.pkl
