@@ -4,18 +4,16 @@ import pandas as pd
 from src.Retail_Sale_Intelligent_System.logger import logging
 from src.Retail_Sale_Intelligent_System.exception import CustomException
 
-# Evidently Imports
-try:
-    from evidently.report import Report
-    from evidently.metric_preset import DataDriftPreset
-    from evidently import ColumnMapping
-except ImportError:
-    print("Evidently library not installed. Please run: pip install evidently")
-    sys.exit(1)
+# --- MAINE TRY/EXCEPT HATA DIYA HAI ---
+# Ab agar error aayega, toh Python poora chittha khol dega
+from evidently.report import Report
+from evidently.metric_preset import DataDriftPreset
+from evidently import ColumnMapping
+# --------------------------------------
 
 class ModelMonitoring:
     def __init__(self):
-        # Paths - Adjusted to look for artifacts from root
+        # Paths - Adjusted for root execution
         self.train_data_path = os.path.join("artifacts", "train.csv")
         self.log_data_path = os.path.join("artifacts", "prediction_logs.csv")
         self.report_path = os.path.join("artifacts", "monitoring_report.html")

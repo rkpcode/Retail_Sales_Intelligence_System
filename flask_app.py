@@ -9,7 +9,7 @@ import os
 app = Flask(__name__)
 
 # Load the model and preprocessor
-model = pickle.load(open('artifacts/model.pkl', 'rb'))
+model = pickle.load(open('artifacts/best_model.pkl', 'rb'))
 preprocessor = pickle.load(open('artifacts/preprocessor.pkl', 'rb'))
 
 @app.route('/')
