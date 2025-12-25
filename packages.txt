@@ -1,2 +1,0 @@
-# System-level dependencies for Streamlit Cloud deployment
-# These packages will be installed via apt-get
