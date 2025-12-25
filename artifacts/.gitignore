@@ -1,5 +1,9 @@
+# Data files (keep ignored - too large)
 /raw_data.csv
 /test.csv
 /train.csv
-/preprocessor.pkl
-/best_model.pkl
+
+# Model files (UNCOMMENTED for deployment)
+# These files MUST be committed for Streamlit Cloud deployment
+# /preprocessor.pkl
+# /best_model.pkl
